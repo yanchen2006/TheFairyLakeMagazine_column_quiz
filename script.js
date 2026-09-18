@@ -633,6 +633,252 @@ function buildShareText(placement) {
   return `我在「神仙湖畔杂志社栏目分院帽」测出了主栏目【${placement.primary}】，备选【${alts}】！你适合哪个栏目？`;
 }
 
+function loadShareImage(src) {
+  const tryLoad = (useCors) =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      if (useCors) img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("image load failed"));
+      img.src = src;
+    });
+
+  return tryLoad(true).catch(() => tryLoad(false));
+}
+
+function wrapCanvasText(ctx, text, maxWidth) {
+  const lines = [];
+  let line = "";
+  Array.from(text).forEach((ch) => {
+    const next = line + ch;
+    if (line && ctx.measureText(next).width > maxWidth) {
+      lines.push(line);
+      line = ch;
+    } else {
+      line = next;
+    }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function drawRoundRect(ctx, x, y, w, h, r) {
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + w, y, x + w, y + h, radius);
+  ctx.arcTo(x + w, y + h, x, y + h, radius);
+  ctx.arcTo(x, y + h, x, y, radius);
+  ctx.arcTo(x, y, x + w, y, radius);
+  ctx.closePath();
+}
+
+async function downloadResultImage(placement, scores) {
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
+
+  const qr = await loadShareImage("QRcode.png");
+  const width = 1080;
+  const height = 1920;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+
+  const bg = "#F7F4EC";
+  const green = "#173F35";
+  const green2 = "#315C4D";
+  const gold = "#B89B5E";
+  const text = "#26332F";
+  const lightGreen = "#E5E9E1";
+  const muted = "#5B6A64";
+  const serif = '"Noto Serif SC", "Songti SC", "STSong", "SimSun", serif';
+  const sans = '-apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, width, height);
+  ctx.save();
+  ctx.strokeStyle = "rgba(23, 63, 53, 0.04)";
+  ctx.lineWidth = 1;
+  for (let y = 24; y < height; y += 24) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  const cx = width / 2;
+  let y = 110;
+
+  ctx.fillStyle = green;
+  ctx.font = `22px ${serif}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  if (ctx.letterSpacing !== undefined) ctx.letterSpacing = "10px";
+  ctx.fillText("THE FAIRY LAKE MAGAZINE", cx, y);
+  if (ctx.letterSpacing !== undefined) ctx.letterSpacing = "0px";
+
+  y += 36;
+  ctx.strokeStyle = gold;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 48, y);
+  ctx.lineTo(cx + 48, y);
+  ctx.stroke();
+
+  y += 56;
+  ctx.fillStyle = green;
+  ctx.font = `40px ${serif}`;
+  ctx.fillText("神仙湖畔杂志社", cx, y);
+
+  y += 52;
+  ctx.fillStyle = gold;
+  ctx.font = `26px ${sans}`;
+  ctx.fillText("栏目分院帽", cx, y);
+
+  y += 70;
+  ctx.fillStyle = gold;
+  ctx.font = `22px ${sans}`;
+  ctx.fillText("你的分院结果是", cx, y);
+
+  y += 90;
+  ctx.fillStyle = green;
+  ctx.textBaseline = "middle";
+  if (placement.tied) {
+    ctx.font = `22px ${sans}`;
+    ctx.fillStyle = gold;
+    ctx.fillText("主栏目", cx, y);
+    y += 70;
+    ctx.fillStyle = green;
+    ctx.font = `96px ${serif}`;
+    ctx.fillText(placement.primary, cx, y);
+    y += 78;
+    ctx.fillStyle = gold;
+    ctx.font = `22px ${sans}`;
+    ctx.fillText("备选栏目", cx, y);
+    y += 52;
+    ctx.fillStyle = green2;
+    ctx.font = `48px ${serif}`;
+    ctx.fillText(placement.alternatives.join("  ·  "), cx, y);
+    y += 70;
+  } else {
+    ctx.font = `120px ${serif}`;
+    ctx.fillText(placement.primary, cx, y);
+    y += 88;
+  }
+
+  const desc = placement.tied
+    ? [placement.primary, ...placement.alternatives]
+        .map((name) => `${name}：${departments[name].description}`)
+        .join(" ")
+    : departments[placement.primary].description;
+
+  ctx.fillStyle = muted;
+  ctx.font = `28px ${sans}`;
+  ctx.textAlign = "center";
+  const descLines = wrapCanvasText(ctx, desc, 820).slice(0, 6);
+  descLines.forEach((line) => {
+    ctx.fillText(line, cx, y);
+    y += 42;
+  });
+
+  y += 36;
+  ctx.strokeStyle = gold;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(120, y);
+  ctx.lineTo(width - 120, y);
+  ctx.stroke();
+
+  y += 52;
+  ctx.fillStyle = gold;
+  ctx.font = `22px ${sans}`;
+  ctx.textAlign = "left";
+  ctx.fillText("你的栏目契合度", 120, y);
+
+  y += 48;
+  const maxBar = Math.max(placement.maxScore, 1);
+  const barX = 300;
+  const barW = 560;
+  const barH = 18;
+
+  COLUMN_ORDER.forEach((name) => {
+    const value = scores[name];
+    const isWinner = value === placement.maxScore;
+    ctx.fillStyle = isWinner ? green : muted;
+    ctx.font = `${isWinner ? "bold " : ""}28px ${sans}`;
+    ctx.textAlign = "left";
+    ctx.fillText(name, 120, y + 2);
+
+    ctx.fillStyle = lightGreen;
+    ctx.fillRect(barX, y - 10, barW, barH);
+    ctx.fillStyle = isWinner ? green : green2;
+    ctx.fillRect(barX, y - 10, barW * (value / maxBar), barH);
+
+    ctx.fillStyle = isWinner ? green : muted;
+    ctx.textAlign = "right";
+    ctx.font = `26px ${sans}`;
+    ctx.fillText(String(value), width - 120, y + 2);
+    y += 52;
+  });
+
+  const caption = "扫一扫测你适合的栏目";
+  const qrSize = 200;
+  const gap = 32;
+  ctx.font = `28px ${sans}`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  const textW = ctx.measureText(caption).width;
+  const groupW = textW + gap + qrSize;
+  const groupX = (width - groupW) / 2;
+  const qrY = height - 88 - qrSize;
+  const textY = qrY + qrSize / 2;
+
+  ctx.strokeStyle = "rgba(184, 155, 94, 0.55)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(120, qrY - 48);
+  ctx.lineTo(width - 120, qrY - 48);
+  ctx.stroke();
+
+  ctx.fillStyle = green;
+  ctx.fillText(caption, groupX, textY);
+  drawRoundRect(ctx, groupX + textW + gap - 8, qrY - 8, qrSize + 16, qrSize + 16, 0);
+  ctx.strokeStyle = gold;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.drawImage(qr, groupX + textW + gap, qrY, qrSize, qrSize);
+
+  await new Promise((resolve, reject) => {
+    const triggerDownload = (href) => {
+      const link = document.createElement("a");
+      link.href = href;
+      link.download = "神仙湖畔杂志社-栏目分院帽-结果.png";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    };
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        triggerDownload(url);
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        resolve();
+        return;
+      }
+      try {
+        triggerDownload(canvas.toDataURL("image/png"));
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    }, "image/png");
+  });
+}
+
 function restartQuiz() {
   state.currentQuestion = 0;
   state.answers = Array(questions.length).fill(null);
@@ -647,44 +893,21 @@ function restartQuiz() {
 }
 
 async function shareResult() {
-  const text = els.shareBtn.dataset.shareText || "我完成了「神仙湖畔杂志社栏目分院帽」。";
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: "神仙湖畔杂志社栏目分院帽", text });
-      return;
-    } catch (error) {
-      if (error && error.name === "AbortError") return;
-    }
-  }
-
-  const copied = await copyText(text);
   els.shareToast.hidden = false;
-  els.shareToast.textContent = copied ? "结果已复制" : "复制失败，请手动复制结果文案";
-  window.setTimeout(() => {
-    els.shareToast.hidden = true;
-  }, 2400);
-}
-
-async function copyText(text) {
+  els.shareToast.textContent = "正在生成图片…";
+  els.shareBtn.disabled = true;
   try {
-    await navigator.clipboard.writeText(text);
-    return true;
+    const scores = calculateScores();
+    const placement = resolvePlacement(scores);
+    await downloadResultImage(placement, scores);
+    els.shareToast.textContent = "图片已下载";
   } catch (error) {
-    const area = document.createElement("textarea");
-    area.value = text;
-    area.setAttribute("readonly", "");
-    area.style.position = "fixed";
-    area.style.left = "-9999px";
-    document.body.appendChild(area);
-    area.select();
-    let ok = false;
-    try {
-      ok = document.execCommand("copy");
-    } catch (err) {
-      ok = false;
-    }
-    document.body.removeChild(area);
-    return ok;
+    els.shareToast.textContent = "图片生成失败，请稍后重试";
+  } finally {
+    els.shareBtn.disabled = false;
+    window.setTimeout(() => {
+      els.shareToast.hidden = true;
+    }, 2400);
   }
 }
 
