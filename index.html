@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="神仙湖畔杂志社栏目分院帽：测测你最适合成为哪一栏目的编辑。">
+  <title>神仙湖畔杂志社 · 栏目分院帽</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="paper-grain" aria-hidden="true"></div>
+
+  <div class="app">
+    <section id="screen-home" class="screen screen-home is-active" aria-label="首页">
+      <header class="masthead">
+        <p class="masthead-en">THE FAIRY LAKE MAGAZINE</p>
+        <span class="gold-rule" aria-hidden="true"></span>
+        <p class="masthead-issue">EDITORIAL DIVISION · SORTING HAT</p>
+      </header>
+
+      <div class="home-hero">
+        <div class="lake-ornament" aria-hidden="true">
+          <svg viewBox="0 0 320 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 36C48 18 88 54 128 36C168 18 208 54 248 36C272 26 296 34 312 36" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M20 48C56 38 92 58 128 48C164 38 200 58 236 48C260 42 284 46 300 48" stroke="currentColor" stroke-width="0.8" opacity="0.55"/>
+            <path d="M36 24C76 12 108 32 148 22" stroke="currentColor" stroke-width="0.7" opacity="0.4"/>
+            <ellipse cx="160" cy="36" rx="14" ry="5" stroke="currentColor" stroke-width="0.8" opacity="0.7"/>
+          </svg>
+        </div>
+
+        <p class="kicker">校园刊物 · 栏目分院</p>
+        <h1 class="home-title">神仙湖畔杂志社</h1>
+        <h2 class="home-subtitle">栏目分院帽</h2>
+        <p class="home-lead">测测你最适合成为哪一栏目的编辑。</p>
+
+        <button type="button" class="btn btn-primary" id="start-btn" aria-label="开始测评">
+          开始测评 →
+        </button>
+      </div>
+
+      <footer class="page-footer">
+        <span>THE FAIRY LAKE MAGAZINE · EDITORIAL DIVISION</span>
+        <span class="page-no">VOL. 01</span>
+      </footer>
+    </section>
+
+    <section id="screen-quiz" class="screen screen-quiz" hidden aria-hidden="true" aria-label="测评">
+      <header class="quiz-header">
+        <div class="quiz-brand">
+          <p class="brand-en">THE FAIRY LAKE</p>
+          <p class="brand-en">MAGAZINE</p>
+        </div>
+        <p class="quiz-running">神仙湖畔杂志社 · 栏目分院帽</p>
+        <p class="quiz-progress-num" id="progress-num" aria-live="polite">01 / 07</p>
+      </header>
+
+      <div class="progress-track" aria-hidden="true">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <p class="visually-hidden" id="progress-text">第 1 题，共 7 题</p>
+
+      <article class="quiz-card" id="quiz-card">
+        <p class="question-index" id="question-index">Q. 01</p>
+        <h2 class="question-text" id="question-text"></h2>
+        <fieldset class="options" id="options"></fieldset>
+      </article>
+
+      <nav class="quiz-nav">
+        <button type="button" class="btn btn-ghost" id="prev-btn" aria-label="上一题">
+          ← 上一题
+        </button>
+        <button type="button" class="btn btn-primary" id="next-btn" aria-label="下一题" disabled>
+          下一题 →
+        </button>
+      </nav>
+
+      <footer class="page-footer">
+        <span>THE FAIRY LAKE MAGAZINE · EDITORIAL DIVISION</span>
+        <span class="page-no" id="quiz-page-no">01</span>
+      </footer>
+    </section>
+
+    <section id="screen-result" class="screen screen-result" hidden aria-hidden="true" aria-label="测评结果">
+      <header class="result-header">
+        <p class="masthead-en">神仙湖畔杂志社</p>
+        <span class="gold-rule" aria-hidden="true"></span>
+        <p class="result-kicker">栏目分院帽</p>
+      </header>
+
+      <div class="result-ceremony" id="result-ceremony">
+        <p class="result-label">你的分院结果是</p>
+        <div id="result-headline"></div>
+        <p class="result-desc" id="result-desc"></p>
+      </div>
+
+      <section class="scoreboard" aria-labelledby="scoreboard-title">
+        <h3 id="scoreboard-title" class="scoreboard-title">你的栏目契合度</h3>
+        <div id="score-bars"></div>
+      </section>
+
+      <div class="result-actions">
+        <button type="button" class="btn btn-primary" id="restart-btn" aria-label="再测一次">
+          再测一次
+        </button>
+        <button type="button" class="btn btn-outline" id="share-btn" aria-label="分享结果">
+          分享结果
+        </button>
+      </div>
+      <p class="share-toast" id="share-toast" role="status" aria-live="polite" hidden></p>
+
+      <footer class="page-footer">
+        <span>THE FAIRY LAKE MAGAZINE · EDITORIAL DIVISION</span>
+        <span class="page-no">FINIS</span>
+      </footer>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
